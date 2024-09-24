@@ -149,7 +149,6 @@
 // `;
 
 // export default Tasks;
-"use client";
 import { useGlobalState } from "@/app/context/globalProvider";
 import React from "react";
 import styled from "styled-components";
@@ -158,9 +157,22 @@ import TaskItem from "../TaskItem/TaskItem";
 import { add, plus } from "@/app/utils/Icons";
 import Modal from "../Modals/Modal";
 
+interface Task {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  isCompleted: boolean;
+}
+
+interface ErrorResponse {
+  error: string;
+  status: number;
+}
+
 interface Props {
   title: string;
-  tasks?: any[] | { error: string; status: number }; // Can be an array or an error object
+  tasks?: Task[] | ErrorResponse; // Can be an array of tasks or an error object
 }
 
 function Tasks({ title, tasks }: Props) {
@@ -175,7 +187,7 @@ function Tasks({ title, tasks }: Props) {
     }
 
     // Handle the case where the API returned an error (like Unauthorized)
-    if (!Array.isArray(tasks) && tasks?.error) {
+    if (isErrorResponse(tasks)) {
       return <p>Unauthorized access. Please login.</p>;
     }
 
@@ -195,6 +207,11 @@ function Tasks({ title, tasks }: Props) {
 
     // Handle the case where there are no tasks
     return <p>No tasks found.</p>;
+  };
+
+  // Type guard to check if tasks is an ErrorResponse
+  const isErrorResponse = (response: any): response is ErrorResponse => {
+    return typeof response === "object" && response !== null && 'error' in response;
   };
 
   return (
@@ -300,4 +317,3 @@ const TaskStyled = styled.main`
 `;
 
 export default Tasks;
-
