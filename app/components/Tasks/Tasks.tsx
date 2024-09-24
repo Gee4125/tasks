@@ -9,14 +9,42 @@ import Modal from "../Modals/Modal";
 
 interface Props {
   title: string;
-  tasks?: any[]; // Optional, defaulting to an empty array
+  tasks?: any[] | { error: string; status: number }; // Can be an array or an error object
 }
 
-function Tasks({ title, tasks = [] }: Props) {
+function Tasks({ title, tasks }: Props) {
   const { theme, isLoading, openModal, modal } = useGlobalState();
 
   // Debugging log
   console.log('Tasks:', tasks);
+
+  const renderTasks = () => {
+    if (!tasks) {
+      return <p>Loading tasks...</p>;
+    }
+
+    // Handle the case where the API returned an error (like Unauthorized)
+    if (tasks && tasks.error) {
+      return <p>Unauthorized access. Please login.</p>;
+    }
+
+    // Ensure tasks is an array before attempting to map
+    if (Array.isArray(tasks) && tasks.length > 0) {
+      return tasks.map((task) => (
+        <TaskItem
+          key={task.id}
+          title={task.title}
+          description={task.description}
+          date={task.date}
+          isCompleted={task.isCompleted}
+          id={task.id}
+        />
+      ));
+    }
+
+    // Handle the case where there are no tasks
+    return <p>No tasks found.</p>;
+  };
 
   return (
     <TaskStyled theme={theme}>
@@ -28,22 +56,7 @@ function Tasks({ title, tasks = [] }: Props) {
       </button>
 
       <div className="tasks grid">
-        {/* Add error handling and array check */}
-        {Array.isArray(tasks) && tasks.length > 0 ? (
-          tasks.map((task) => (
-            <TaskItem
-              key={task.id} // Ensure `task.id` is unique
-              title={task.title}
-              description={task.description}
-              date={task.date}
-              isCompleted={task.isCompleted}
-              id={task.id}
-            />
-          ))
-        ) : (
-          // Handle case where tasks array is empty or unauthorized
-          <p>{tasks.error ? 'Unauthorized access. Please login.' : 'No tasks found.'}</p>
-        )}
+        {renderTasks()}
         <button className="create-task" onClick={openModal}>
           {add}
           Add New Task
